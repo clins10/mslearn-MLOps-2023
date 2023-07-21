@@ -3,6 +3,9 @@
 import argparse
 import glob
 import os
+import mlflow
+from xgboost import XGBClassifier
+from sklearn.metrics import accuracy_score
 
 import pandas as pd
 
@@ -12,6 +15,15 @@ from sklearn.linear_model import LogisticRegression
 # define functions
 def main(args):
     # TO DO: enable autologging
+    #added this autolog() code on 21-07-2023
+    mlflow.autolog()
+
+    model = XGBClassifier(use_label_encoder=False, eval_metric="logloss")
+    model.fit(X_train, y_train, eval_set=[(X_test, y_test)], verbose=False)
+
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    #end of code
 
 
     # read data
@@ -34,7 +46,17 @@ def get_csvs_df(path):
 
 
 # TO DO: add function to split data
+# I added this function on 21-07-2023
+def split_data(df):
+    X = df.drop('Y', axis=1).values
+    y = df['Y'].values
 
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=0)
+    data = {"train": {"X": X_train, "y": y_train},
+            "test": {"X": X_test, "y": y_test}}
+    return data
+    #end of function
 
 def train_model(reg_rate, X_train, X_test, y_train, y_test):
     # train model
